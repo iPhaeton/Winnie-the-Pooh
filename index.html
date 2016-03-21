@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -9,13 +10,11 @@
             margin: 0;
             padding: 0;
         }
-
         .column-left {
             float: left;
             width: 30%;
             background: #aef;
         }
-
         .column-right {
             margin-left: 30%;
             width: 70%;
@@ -23,17 +22,14 @@
             overflow: auto;
             /* расшириться вниз захватить float'ы */
         }
-
         .header {
             line-height: 60px;
             background: yellow;
         }
-
         .inner {
             margin: 1em;
             font-size: 130%;
         }
-
         #avatar {
             float: left;
             margin: 0 1em .5em 0;
@@ -41,6 +37,11 @@
             text-align: center;
             background: white;
         }
+		
+		.moving {
+			position: fixed;
+			top: 0;
+		}
     </style>
 </head>
 
@@ -106,66 +107,52 @@
 </div>
 
 <script>
-    var avatar = document.getElementById("avatar"),
-        colRightInner = document.querySelector(".column-right").firstElementChild;
-
-    var avatarStyle = getComputedStyle(avatar),
-        avatarInitPos = avatar.getBoundingClientRect(),
-        avatarPos = undefined;
-
-    var backDiv = undefined,
-        backDivPos = undefined;
-
-    var currentScroll = 0;
-
-    var avatarMoving = false;
-
+    var avatar = document.getElementById("avatar");		
+    var avatarInitPos = avatar.getBoundingClientRect();
+    var backDiv = undefined;		
+    var moving = false;
+	
     document.addEventListener("scroll", moveAvatar);
-
+	
     function moveAvatar (event) {
-        avatarPos = avatar.getBoundingClientRect();
-        if (avatarPos.top < 0) avatarMoving = true;
 
-        if (!avatarMoving) return;
-
-        var deltaY = window.pageYOffset - currentScroll;
-        currentScroll = window.pageYOffset;
-
-        if (!backDiv) {
-            backDiv = document.createElement("div");
-
-            backDiv.style.width = avatar.offsetWidth + "px";
-            backDiv.style.height = avatar.offsetHeight + "px";
-            backDiv.style.float = "left";
-
-            backDiv.style.marginBottom = avatarStyle.marginBottom;
-            backDiv.style.marginLeft = avatarStyle.marginLeft;
-            backDiv.style.marginRight = avatarStyle.marginRight;
-            backDiv.style.marginTop = avatarStyle.marginTop;
-
-            colRightInner.insertBefore(backDiv, avatar);
-
-            backDivPos = backDiv.getBoundingClientRect();
-
-            avatar.style.position = "absolute";
-        };
-
-        avatar.style.top = window.pageYOffset + "px";
-        avatarPos = avatar.getBoundingClientRect();
-        backDivPos = backDiv.getBoundingClientRect();
-
-        backDiv.style.height = avatarPos.bottom - backDivPos.top + "px";
-
-        if (avatarPos.top + window.pageYOffset < avatarInitPos.top) {
-            colRightInner.insertBefore(avatar, backDiv);
-            avatar.style.position = "static";
-            avatar.style.float = "left";
-
-            colRightInner.removeChild(backDiv);
-            backDiv = undefined;
-            avatarMoving = false;
-        };
+		if (moving) {
+			var backDivPos = backDiv.getBoundingClientRect();
+			var avatarPos = avatar.getBoundingClientRect();
+			backDiv.style.height = avatarPos.bottom - backDivPos.top + "px";
+		};
+		
+		if (window.pageYOffset > avatarInitPos.top && !moving) {
+			moving = true;
+			backDiv = createBackDiv (avatar);
+			avatar.classList.toggle ("moving");
+		}
+		else if (window.pageYOffset < avatarInitPos.top && moving) {
+			moving = false;
+			avatar.classList.toggle ("moving");
+				
+			avatar.parentElement.removeChild(backDiv);
+			backDiv = undefined;
+		};
+		
     };
+	
+	function createBackDiv (elem) {
+		var backDiv = document.createElement("div");
+        backDiv.style.width = elem.offsetWidth + "px";
+        backDiv.style.height = elem.offsetHeight + "px";
+        backDiv.style.float = "left";
+		
+		var elemStyle = getComputedStyle(avatar);
+			
+        backDiv.style.marginBottom = elemStyle.marginBottom;
+        backDiv.style.marginLeft = elemStyle.marginLeft;
+        backDiv.style.marginRight = elemStyle.marginRight;
+        backDiv.style.marginTop = elemStyle.marginTop;
+			
+        elem.parentElement.insertBefore(backDiv, elem);
+		return backDiv;
+	};
 </script>
 
 </body>
